@@ -11,6 +11,14 @@ module.exports = {
             return parent.comments.length;
         }
     },
+    User: {
+        followsCount(parent) {
+            return parent.follows.length;
+        },
+        followersCount(parent) {
+            return parent.followers.length;
+        }
+    },
     Query: {
         ...postsResolvers.Query,
         ...usersResolvers.Query,
