@@ -8,22 +8,61 @@ const {
 } = require("../../utils/validators");
 const { SECRET_KEY } = require("../../config");
 const User = require("../../models/User");
+const checkAuth = require("../../utils/check-auth");
 
 const generateToken = (user) => {
-    const token = jwt.sign(
-        {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-        },
-        SECRET_KEY,
-        { expiresIn: "1h" }
-      );
-      return token;
-}
+  const token = jwt.sign(
+    {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    },
+    SECRET_KEY,
+    { expiresIn: "1h" }
+  );
+  return token;
+};
 
 module.exports = {
+  Query: {
+    async getUser(_, { username }) {
+      try {
+        const user = await User.findOne({username});
+        if (user) return user;
+        else throw new Error("User not found");
+      } catch (err) {
+        throw new Error(err);
+      }
+    },
+    async getUsers(_, { usernames }){
+      const users = await usernames.map(username => User.findOne({username}));
+      return users;
+    }
+  },
   Mutation: {
+    async follow(_, { id }, context) {
+      const user = checkAuth(context);
+      try {
+        const follower = await User.findById(user.id);
+        const follow = await User.findById(id);
+
+        if(follower.follows.indexOf(follow.username) < 0) {
+          follower.follows.unshift(follow.username);
+          follow.followers.unshift(user.username);
+        } else {
+          const followIndex = follower.follows.indexOf(follow.username);
+          const followerIndex = follow.followers.indexOf(follower.username);
+          follower.follows.splice(followIndex, 1);
+          follow.followers.splice(followerIndex, 1);
+        }
+
+        await follow.save();
+        return await follower.save();
+
+      } catch (err) {
+        throw new Error(err);
+      }
+    },
     async register(
       _,
       { registerInput: { username, password, email, confirmPassword } }
@@ -72,12 +111,12 @@ module.exports = {
       if (!isValid) {
         throw new UserInputError("Error", { errors });
       }
-      const user = await User.findOne({username});
+      const user = await User.findOne({ username });
 
       const match = await bcrypt.compare(password, user.password);
 
-      if(!user || !match){
-          throw new UserInputError("incorrect password or login")
+      if (!user || !match) {
+        throw new UserInputError("incorrect password or login");
       }
 
       const token = generateToken(user);

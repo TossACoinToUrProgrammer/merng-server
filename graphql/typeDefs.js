@@ -25,9 +25,12 @@ module.exports = gql`
   type User {
       id: ID!
       email: String!
+      img: String
       token: String!
       username: String!
       createdAt: String!
+      follows: [ID]!
+      followers: [ID]!
   }
   input RegisterInput {
       username: String!
@@ -42,6 +45,9 @@ module.exports = gql`
   type Query {
     getPosts: [Post]
     getPost(id: ID!): Post
+
+    getUser(username: String!): User
+    getUsers(usernames: [String]!): [User]
   }
   type Mutation {
       register(registerInput: RegisterInput): User!
@@ -51,6 +57,8 @@ module.exports = gql`
       createComment(postId: ID!, body: String!): Post!
       deleteComment(postId: ID!, commentId: ID!): Post!
       likePost(postId: ID!): Post!
+
+      follow(id: ID!): User!
   }
   type Subscription {
     newPost: Post!
