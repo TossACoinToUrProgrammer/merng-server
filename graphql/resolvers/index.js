@@ -1,6 +1,7 @@
 const postsResolvers = require('./posts');
 const usersResolvers = require('./users');
 const commentsResolvers = require('./comments');
+const User = require('../../models/User');
 
 module.exports = {
     Post: {
@@ -9,6 +10,9 @@ module.exports = {
         },
         commentsCount(parent) {
             return parent.comments.length;
+        },
+        user(parent){
+            return User.findOne({username: parent.username});
         }
     },
     User: {

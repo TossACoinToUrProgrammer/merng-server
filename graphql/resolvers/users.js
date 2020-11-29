@@ -116,7 +116,7 @@ module.exports = {
       const match = await bcrypt.compare(password, user.password);
 
       if (!user || !match) {
-        throw new UserInputError("incorrect password or login");
+        throw new Error("incorrect password or login");
       }
 
       const token = generateToken(user);
